@@ -1,6 +1,15 @@
 # 🤖 Multi-Agent Task 3 - AI Agent Framework
 
 > **Advanced Multi-Agent System** - A sophisticated framework for building intelligent autonomous agents with specialized capabilities, inter-agent communication, and collaborative problem-solving.
+>
+> ## 🎯 Live Demo
+
+**Try the Multi-Agent System Now:**
+
+[![Streamlit App](https://img.shields.io/badge/Streamlit-Live%20Demo-blue?logo=streamlit&style=for-the-badge)](https://multiagenttask3-b4ngmxh9e596cmquzis9k2.streamlit.app/)
+
+🚀 **[Open Interactive Demo](https://multiagenttask3-b4ngmxh9e596cmquzis9k2.streamlit.app/)** - Experience the multi-agent system in action with real-time agent responses.
+
 
 ## 📌 Project Overview
 
