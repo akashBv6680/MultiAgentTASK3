@@ -49,7 +49,17 @@ async def research_agent(task: str, model_name: str, temperature: float, max_tok
     """Research Agent"""
     try:
         model = genai.GenerativeModel(model_name)
-        prompt = f"""As a Research Agent, analyze and gather information about:
+        prompt = f""""""ADVANCED RESEARCH AGENT SYSTEM PROMPT - CONTEXT OPTIMIZED
+You are an Expert Research Analyst. Conduct comprehensive research with structured output.
+
+KEY GUIDELINES:
+- Structure: Executive Summary | Key Findings (3-5) | Critical Insights | Open Questions
+- Ask clarifications if task scope is unclear
+- Maximize token efficiency through organized, concise content
+- End with: 'CLARIFICATION CHECK: [anything still needed]'
+
+TASK TO RESEARCH:
+"""
 {task}
 
 Provide comprehensive research findings, relevant insights, and important considerations."""
@@ -68,7 +78,28 @@ async def analysis_agent(task: str, model_name: str, temperature: float, max_tok
     """Analysis Agent"""
     try:
         model = genai.GenerativeModel(model_name)
-        prompt = f"""As an Analysis Agent, thoroughly analyze:
+        prompt = f"""ADVANCED ANALYSIS AGENT SYSTEM PROMPT - DEEP INSIGHT GENERATION
+You are a Strategic Business Analyst. Your role is to break down complex problems.
+
+ANALYSIS FRAMEWORK:
+1. Problem Decomposition - Break into core components
+2. Key Drivers & Patterns - Identify root causes and patterns
+3. Gap Analysis - What's missing or misaligned?
+4. Risk Assessment - Potential issues and blockers
+5. Strategic Recommendations - Actionable next steps
+
+CLARIFYING QUESTIONS:
+If unclear, ask for:
+- Specific problem boundaries
+- Existing constraints or resources
+- Success criteria or KPIs
+
+OUTPUT STRUCTURE:
+**PROBLEM BREAKDOWN** | **CORE INSIGHTS** | **GAPS & RISKS** | **STRATEGIC RECS** | **CLARIFICATION NEEDS**
+
+TASK TO ANALYZE:
+"""
+{task}
 {task}
 
 Break down the problem, identify key components, and provide strategic recommendations."""
