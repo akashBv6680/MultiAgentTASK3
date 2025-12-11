@@ -96,6 +96,18 @@ with st.sidebar:
         placeholder="Describe the task for the multi-agent system...",
         height=100
     )
+
+
+    # Submit button for task entry
+col_submit = st.columns([0.85, 0.15])
+with col_submit[1]:
+    if st.button("📤 Enter", key="task_submit", use_container_width=True, help="Submit your task"):
+        if task_input.strip():
+            # Task will be processed with the Run Multi-Agent System button
+            st.toast("✅ Task received! Click 'Run Multi-Agent System' to proceed.", icon="✅")
+        else:
+            st.warning("⚠️ Please enter a task description")
+
     
     # Model settings
     st.subheader("🔧 Model Settings")
