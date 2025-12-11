@@ -4,7 +4,6 @@ Streamlit Multi-Agent AI System - Task 3
 Advanced Multi-Agent Framework with Gemini 2.5 Flash Integration
 Deployed on Streamlit Cloud
 """
-
 import streamlit as st
 import os
 import asyncio
@@ -22,65 +21,117 @@ st.set_page_config(
 
 # Custom CSS for better UI
 st.markdown("""
-    <style>
-    .agent-box {
-        padding: 1rem;
-        border-radius: 10px;
-        border: 2px solid #1f77b4;
-        margin: 1rem 0;
-        background-color: #f0f2f6;
-    }
-    .agent-status {
-        font-weight: bold;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        display: inline-block;
-    }
-    .status-active {
-        background-color: #90EE90;
-        color: #000;
-    }
-    .status-completed {
-        background-color: #87CEEB;
-        color: #000;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# Initialize Gemini client from Streamlit secrets
-@st.cache_resource
-def initialize_gemini():
-    """Initialize Gemini API client"""
-    api_key = st.secrets.get("GEMINI_API_KEY")
-    if not api_key:
-        st.error("❌ GEMINI_API_KEY not found in Streamlit secrets!")
-        st.info("Please add your API key to .streamlit/secrets.toml or Streamlit Cloud secrets")
-        st.stop()
-    return genai.Client(api_key=api_key)
+<style>
+.agent-box {
+    padding: 1rem;
+    border-radius: 10px;
+    border: 2px solid #1f77b4;
+    margin: 1rem 0;
+    background-color: #f0f2f6;
+}
+.agent-status {
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize session state
 if 'agent_responses' not in st.session_state:
-    st.session_state.agent_responses = []
-if 'task_history' not in st.session_state:
-    st.session_state.task_history = []
+    st.session_state.agent_responses = {}
+
+# Initialize Gemini API
+@st.cache_resource
+def initialize_gemini():
+    api_key = st.secrets.get("GEMINI_API_KEY")
+    if not api_key:
+        return None
+    genai.configure(api_key=api_key)
+    return genai
+
+# Multi-Agent Functions
+async def research_agent(task: str, model_name: str, temperature: float, max_tokens: int):
+    """Research Agent - Gathers information about the task"""
+    client = genai.Client(api_key=st.secrets.get("GEMINI_API_KEY"))
+    prompt = f"""As a Research Agent, analyze and gather information about the following task:
+{task}
+
+Provide comprehensive research findings, relevant insights, and important considerations."""
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        generation_config={
+            "temperature": temperature,
+            "max_output_tokens": max_tokens,
+        }
+    )
+    return response.text
+
+async def analysis_agent(task: str, model_name: str, temperature: float, max_tokens: int):
+    """Analysis Agent - Analyzes the task and provides insights"""
+    client = genai.Client(api_key=st.secrets.get("GEMINI_API_KEY"))
+    prompt = f"""As an Analysis Agent, thoroughly analyze the following task and provide detailed insights:
+{task}
+
+Break down the problem, identify key components, and provide strategic recommendations."""
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        generation_config={
+            "temperature": temperature,
+            "max_output_tokens": max_tokens,
+        }
+    )
+    return response.text
+
+async def planning_agent(task: str, model_name: str, temperature: float, max_tokens: int):
+    """Planning Agent - Creates a strategic plan"""
+    client = genai.Client(api_key=st.secrets.get("GEMINI_API_KEY"))
+    prompt = f"""As a Planning Agent, create a detailed strategic plan for:
+{task}
+
+Include phases, milestones, resources needed, timelines, and success metrics."""
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        generation_config={
+            "temperature": temperature,
+            "max_output_tokens": max_tokens,
+        }
+    )
+    return response.text
+
+async def execution_agent(task: str, model_name: str, temperature: float, max_tokens: int):
+    """Execution Agent - Proposes implementation steps"""
+    client = genai.Client(api_key=st.secrets.get("GEMINI_API_KEY"))
+    prompt = f"""As an Execution Agent, propose concrete implementation steps for:
+{task}
+
+Provide step-by-step instructions, code examples if applicable, and best practices."""
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        generation_config={
+            "temperature": temperature,
+            "max_output_tokens": max_tokens,
+        }
+    )
+    return response.text
 
 # Main UI
 st.title("🤖 Multi-Agent AI System - Task 3")
-st.markdown("""
-**Advanced AI Agent Framework with Gemini 2.5 Flash**
-
-Powered by:
+st.markdown("**Advanced AI Agent Framework with Gemini 2.5 Flash**")
+st.markdown("""Powered by:
 - 🧠 Google Gemini 2.5 Flash
 - 🔄 Multi-Agent Architecture
-- ☁️ Streamlit Cloud Deployment
-""")
+- ☁️ Streamlit Cloud Deployment""")
 
-# Sidebar configuration
+# ============ SIDEBAR CONFIGURATION ============
 with st.sidebar:
     st.title("⚙️ Configuration")
-    st.divider()
     
-    # Agent selection
+    # Agent Selection
     st.subheader("👥 Select Agents")
     researcher_enabled = st.checkbox("🔍 Research Agent", value=True)
     analyzer_enabled = st.checkbox("📊 Analysis Agent", value=True)
@@ -89,27 +140,26 @@ with st.sidebar:
     
     st.divider()
     
-    # Task input
+    # Task Input
     st.subheader("📝 Task Configuration")
     task_input = st.text_area(
         "Enter your task:",
         placeholder="Describe the task for the multi-agent system...",
         height=100
     )
-
-
-    # Submit button for task entry
-col_submit = st.columns([0.85, 0.15])
-with col_submit[1]:
-    if st.button("📤 Enter", key="task_submit", use_container_width=True, help="Submit your task"):
-        if task_input.strip():
-            # Task will be processed with the Run Multi-Agent System button
-            st.toast("✅ Task received! Click 'Run Multi-Agent System' to proceed.", icon="✅")
-        else:
-            st.warning("⚠️ Please enter a task description")
-
     
-    # Model settings
+    # Submit Button for Task Entry
+    col_submit = st.columns([0.85, 0.15])
+    with col_submit[1]:
+        if st.button("📤 Enter", key="task_submit", use_container_width=True):
+            if task_input.strip():
+                st.toast("✅ Task received! Click 'Run Multi-Agent System' to proceed.", icon="✅")
+            else:
+                st.warning("⚠️ Please enter a task description")
+    
+    st.divider()
+    
+    # Model Settings
     st.subheader("🔧 Model Settings")
     model_name = st.selectbox(
         "Select Gemini Model",
@@ -123,7 +173,7 @@ with col_submit[1]:
         max_value=1.0,
         value=0.7,
         step=0.1,
-        help="Controls randomness: lower = more deterministic, higher = more creative"
+        help="Controls randomness: lower = deterministic, higher = creative"
     )
     
     max_tokens = st.number_input(
@@ -140,16 +190,21 @@ with col_submit[1]:
     st.subheader("📊 API Status")
     try:
         client = initialize_gemini()
-        st.success("✅ Gemini API Connected")
+        if client:
+            st.success("✅ Gemini API Connected")
+        else:
+            st.error("❌ API Key not found in secrets")
     except Exception as e:
         st.error(f"❌ API Error: {str(e)}")
 
-# Main content area
+# ============ MAIN CONTENT AREA ============
+# Tabs for different sections
 tab1, tab2, tab3 = st.tabs(["🎯 Run Agents", "📊 Task History", "ℹ️ About"])
 
 with tab1:
     st.subheader("Multi-Agent Execution")
     
+    # Run and Clear buttons
     col1, col2 = st.columns([3, 1])
     
     with col1:
@@ -164,143 +219,84 @@ with tab1:
         clear_button = st.button("🗑️ Clear", use_container_width=True)
     
     if clear_button:
-        st.session_state.agent_responses = []
+        st.session_state.agent_responses = {}
         st.rerun()
     
     if run_button and task_input:
-        st.info(f"🔄 Processing task: {task_input[:50]}...")
+        progress_bar = st.progress(0)
+        status_placeholder = st.empty()
         
-        try:
-            client = initialize_gemini()
+        agents_to_run = []
+        if researcher_enabled:
+            agents_to_run.append(("Research Agent", research_agent, "🔍"))
+        if analyzer_enabled:
+            agents_to_run.append(("Analysis Agent", analysis_agent, "📊"))
+        if planner_enabled:
+            agents_to_run.append(("Planning Agent", planning_agent, "📋"))
+        if executor_enabled:
+            agents_to_run.append(("Execution Agent", execution_agent, "⚡"))
+        
+        total_agents = len(agents_to_run)
+        st.session_state.agent_responses = {}
+        
+        for idx, (agent_name, agent_func, emoji) in enumerate(agents_to_run):
+            status_placeholder.info(f"{emoji} {agent_name} is running...")
             
-            # Create agent configuration
-            agents_config = {
-                "researcher": researcher_enabled,
-                "analyzer": analyzer_enabled,
-                "planner": planner_enabled,
-                "executor": executor_enabled
-            }
+            try:
+                response = asyncio.run(agent_func(task_input, model_name, temperature, max_tokens))
+                st.session_state.agent_responses[agent_name] = response
+                
+                # Display agent result
+                with st.expander(f"{emoji} {agent_name} - COMPLETED ✅", expanded=(idx < 1)):
+                    st.markdown(response)
+                
+            except Exception as e:
+                st.error(f"❌ Error in {agent_name}: {str(e)}")
+                st.session_state.agent_responses[agent_name] = f"Error: {str(e)}"
             
-            enabled_agents = [k for k, v in agents_config.items() if v]
-            
-            # Process through each agent
-            for agent_type in enabled_agents:
-                with st.container():
-                    st.markdown(f"<div class='agent-box'>", unsafe_allow_html=True)
-                    
-                    if agent_type == "researcher":
-                        agent_emoji = "🔍"
-                        agent_name = "Research Agent"
-                        agent_prompt = f"As a Research Agent, gather and analyze information about: {task_input}"
-                    elif agent_type == "analyzer":
-                        agent_emoji = "📊"
-                        agent_name = "Analysis Agent"
-                        agent_prompt = f"As an Analysis Agent, analyze and extract insights from: {task_input}"
-                    elif agent_type == "planner":
-                        agent_emoji = "📋"
-                        agent_name = "Planning Agent"
-                        agent_prompt = f"As a Planning Agent, create a strategic plan for: {task_input}"
-                    else:  # executor
-                        agent_emoji = "⚡"
-                        agent_name = "Execution Agent"
-                        agent_prompt = f"As an Execution Agent, propose implementation steps for: {task_input}"
-                    
-                    col1, col2 = st.columns([4, 1])
-                    with col1:
-                        st.markdown(f"### {agent_emoji} {agent_name}")
-                    with col2:
-                        st.markdown(f"<span class='agent-status status-active'>ACTIVE</span>", unsafe_allow_html=True)
-                    
-                    # Call Gemini API
-                    with st.spinner(f"Processing with {agent_name}..."):
-                        response = client.models.generate_content(
-                            model=model_name,
-                            contents=agent_prompt,
-                            config={
-                                "temperature": temperature,
-                                "max_output_tokens": max_tokens,
-                            }
-                        )
-                        
-                        response_text = response.text
-                        
-                        # Store in session
-                        st.session_state.agent_responses.append({
-                            "agent": agent_name,
-                            "response": response_text,
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        
-                        st.markdown(response_text)
-                        st.markdown(f"<span class='agent-status status-completed'>COMPLETED</span>", unsafe_allow_html=True)
-                    
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    st.divider()
-            
-            st.success("✅ All agents completed successfully!")
-            
-        except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
-            st.info("Make sure your GEMINI_API_KEY is configured correctly.")
+            progress_bar.progress((idx + 1) / total_agents)
+        
+        status_placeholder.success("✅ All agents completed successfully!")
 
 with tab2:
-    st.subheader("📊 Task History")
-    
+    st.subheader("Task History & Responses")
     if st.session_state.agent_responses:
-        for idx, item in enumerate(st.session_state.agent_responses, 1):
-            with st.expander(f"{idx}. {item['agent']} - {item['timestamp']}"):
-                st.markdown(item['response'])
-                st.caption(f"Timestamp: {item['timestamp']}")
+        st.markdown(f"**Task:** {task_input}")
+        st.markdown(f"**Model:** {model_name}")
+        st.markdown(f"**Timestamp:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        st.divider()
+        
+        for agent_name, response in st.session_state.agent_responses.items():
+            with st.expander(f"{agent_name}"):
+                st.markdown(response)
     else:
-        st.info("No tasks executed yet. Run the Multi-Agent System to see results.")
+        st.info("No task history yet. Run the agents to see results here.")
 
 with tab3:
     st.subheader("About this Application")
     st.markdown("""
-    ## 🤖 Multi-Agent Task 3
+    ### 🤖 Multi-Agent Task 3 - Advanced AI Framework
     
-    **Advanced AI Agent Framework** with Gemini 2.5 Flash Integration
-    
-    ### Features:
-    - ✨ Specialized AI Agents (Research, Analysis, Planning, Execution)
+    **Features:**
+    - 🐝 Specialized AI Agents (Research, Analysis, Planning, Execution)
     - 🧠 Powered by Google Gemini 2.5 Flash
     - ☁️ Deployed on Streamlit Cloud
-    - 🔄 Multi-task Processing
-    - 📊 Task History Tracking
+    - 📊 Multi-task Processing
+    - 📋 Task History Tracking
     
-    ### Architecture:
-    1. **Research Agent** 🔍 - Gathers and processes information
-    2. **Analysis Agent** 📊 - Analyzes data and extracts insights
-    3. **Planning Agent** 📋 - Creates strategic plans
-    4. **Execution Agent** ⚡ - Proposes implementation steps
+    **Architecture:**
+    1. **Research Agent 🔍** - Gathers and processes information
+    2. **Analysis Agent 📊** - Analyzes data and extracts insights
+    3. **Planning Agent 📋** - Creates strategic plans
+    4. **Execution Agent ⚡** - Proposes implementation steps
     
-    ### Configuration:
-    - Model: Gemini 2.5 Flash (Latest)
-    - API: Google GenAI
-    - Deployment: Streamlit Cloud
-    
-    ### Requirements:
-    - Python 3.9+
-    - Streamlit >= 1.28.0
-    - google-genai >= 0.3.0
-    - Valid Gemini API Key
-    
-    ### Setup Instructions:
-    1. Clone the repository
-    2. Install dependencies: `pip install -r requirements.txt`
-    3. Add GEMINI_API_KEY to `.streamlit/secrets.toml`
-    4. Run: `streamlit run main.py`
-    
-    ### Streamlit Cloud Deployment:
-    1. Push code to GitHub
-    2. Connect to Streamlit Cloud
-    3. Add GEMINI_API_KEY to Secrets
-    4. Deploy!
-    
-    ### Author
-    **Akash BV** - AI/ML Engineer
-    - GitHub: [@akashBv6680](https://github.com/akashBv6680)
-    - Portfolio: Multi-Agent AI Systems
+    **How to Use:**
+    1. Enter your task in the sidebar
+    2. Click the Enter button to confirm
+    3. Configure model settings if needed
+    4. Click 'Run Multi-Agent System' to execute
+    5. View results in the Run Agents tab
     """)
 
 # Footer
