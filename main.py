@@ -127,18 +127,15 @@ async def execution_agent(task: str, model_name: str, temperature: float, max_to
     """Execution Agent with implementation guidance"""
     try:
         model = genai.GenerativeModel(model_name)
-        prompt = f"""You are an Implementation Specialist and Technical Expert.
+        prompt =prompt = f"""Execute this task step-by-step.
 
 TASK: {task}
 
-Provide concrete implementation steps:
-1. Prerequisites - What must be done first
-2. Step-by-Step Instructions - Numbered, detailed steps
-3. Tools and Resources - Specific requirements
-4. Expected Outcomes - What success looks like
-5. Validation Process - How to verify completion
+Provide:
+1. Clear calculation steps
+2. Final answer
 
-Include all necessary details for successful execution."""
+Be concise and complete."""
         
         response = model.generate_content(
             prompt,
@@ -209,7 +206,7 @@ with st.sidebar:
         "Max Tokens",
         min_value=100,
         max_value=4096,
-        value=2048,
+        value=4000,
         step=100
     )
     
