@@ -19,17 +19,13 @@ st.set_page_config(
 )
 
 # Custom CSS
-st.markdown("""
-<style>
-.agent-box {
-    padding: 1rem;
-    border-radius: 10px;
-    border: 2px solid #1f77b4;
-    margin: 1rem 0;
-    background-color: #f0f2f6;
-}
-</style>
-""", unsafe_allow_html=True)
+st.markdown("""<style>.agent-box {
+ padding: 1rem;
+ border-radius: 10px;
+ border: 2px solid #1f77b4;
+ margin: 1rem 0;
+ background-color: #f0f2f6;
+}</style>""", unsafe_allow_html=True)
 
 # Initialize session state
 if 'agent_responses' not in st.session_state:
@@ -46,23 +42,21 @@ def initialize_gemini():
 
 # Multi-Agent Functions
 async def research_agent(task: str, model_name: str, temperature: float, max_tokens: int):
-    """Research Agent"""
+    """Research Agent with optimized prompt"""
     try:
         model = genai.GenerativeModel(model_name)
-        prompt = f""""""ADVANCED RESEARCH AGENT SYSTEM PROMPT - CONTEXT OPTIMIZED
-You are an Expert Research Analyst. Conduct comprehensive research with structured output.
+        prompt = f"""You are an Expert Research Analyst with deep domain expertise.
 
-KEY GUIDELINES:
-- Structure: Executive Summary | Key Findings (3-5) | Critical Insights | Open Questions
-- Ask clarifications if task scope is unclear
-- Maximize token efficiency through organized, concise content
-- End with: 'CLARIFICATION CHECK: [anything still needed]'
+TASK: {task}
 
-TASK TO RESEARCH:
-"""
-{task}
+Conduct comprehensive research and provide:
+1. Executive Summary - Clear answer to the task
+2. Methodology - How you arrived at the answer
+3. Detailed Findings - Step-by-step breakdown
+4. Verification - Double-check of your work
 
-Provide comprehensive research findings, relevant insights, and important considerations."""
+Focus on accuracy and completeness."""
+        
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -75,34 +69,21 @@ Provide comprehensive research findings, relevant insights, and important consid
         return f"Error: {str(e)}"
 
 async def analysis_agent(task: str, model_name: str, temperature: float, max_tokens: int):
-    """Analysis Agent"""
+    """Analysis Agent with comprehensive breakdown"""
     try:
         model = genai.GenerativeModel(model_name)
-        prompt = f"""ADVANCED ANALYSIS AGENT SYSTEM PROMPT - DEEP INSIGHT GENERATION
-You are a Strategic Business Analyst. Your role is to break down complex problems.
+        prompt = f"""You are a Strategic Business Analyst with deep problem-solving expertise.
 
-ANALYSIS FRAMEWORK:
-1. Problem Decomposition - Break into core components
-2. Key Drivers & Patterns - Identify root causes and patterns
-3. Gap Analysis - What's missing or misaligned?
-4. Risk Assessment - Potential issues and blockers
-5. Strategic Recommendations - Actionable next steps
+TASK: {task}
 
-CLARIFYING QUESTIONS:
-If unclear, ask for:
-- Specific problem boundaries
-- Existing constraints or resources
-- Success criteria or KPIs
+Provide comprehensive analysis:
+1. Problem Breakdown - Core components and scope
+2. Component Analysis - Detailed examination of each part
+3. Solution Methodology - Step-by-step approach
+4. Verification - Confirm the solution is correct
 
-OUTPUT STRUCTURE:
-**PROBLEM BREAKDOWN** | **CORE INSIGHTS** | **GAPS & RISKS** | **STRATEGIC RECS** | **CLARIFICATION NEEDS**
-
-TASK TO ANALYZE:
-"""
-{task}
-{task}
-
-Break down the problem, identify key components, and provide strategic recommendations."""
+Ensure complete accuracy in all calculations."""
+        
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -115,13 +96,22 @@ Break down the problem, identify key components, and provide strategic recommend
         return f"Error: {str(e)}"
 
 async def planning_agent(task: str, model_name: str, temperature: float, max_tokens: int):
-    """Planning Agent"""
+    """Planning Agent with strategic framework"""
     try:
         model = genai.GenerativeModel(model_name)
-        prompt = f"""As a Planning Agent, create a detailed strategic plan for:
-{task}
+        prompt = f"""You are a Strategic Planning Expert.
 
-Include phases, milestones, resources needed, timelines, and success metrics."""
+TASK: {task}
+
+Create a comprehensive strategic plan:
+1. Phase Definition - Major phases with clear objectives
+2. Milestone Planning - Key checkpoints and success criteria
+3. Resource Requirements - What's needed to succeed
+4. Timeline Estimation - Realistic timeframes
+5. Risk Assessment - Potential challenges and solutions
+
+Be thorough and detailed in your planning."""
+        
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -134,13 +124,22 @@ Include phases, milestones, resources needed, timelines, and success metrics."""
         return f"Error: {str(e)}"
 
 async def execution_agent(task: str, model_name: str, temperature: float, max_tokens: int):
-    """Execution Agent"""
+    """Execution Agent with implementation guidance"""
     try:
         model = genai.GenerativeModel(model_name)
-        prompt = f"""As an Execution Agent, propose concrete implementation steps for:
-{task}
+        prompt = f"""You are an Implementation Specialist and Technical Expert.
 
-Provide step-by-step instructions, code examples if applicable, and best practices."""
+TASK: {task}
+
+Provide concrete implementation steps:
+1. Prerequisites - What must be done first
+2. Step-by-Step Instructions - Numbered, detailed steps
+3. Tools and Resources - Specific requirements
+4. Expected Outcomes - What success looks like
+5. Validation Process - How to verify completion
+
+Include all necessary details for successful execution."""
+        
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -181,7 +180,7 @@ with st.sidebar:
         height=100
     )
     
-    # Submit Button - CENTERED
+    # Submit Button
     if st.button("📤 Enter", key="task_submit", use_container_width=True):
         if task_input.strip():
             st.toast("✅ Task received! Click 'Run Multi-Agent System' to proceed.", icon="✅")
@@ -312,7 +311,7 @@ with tab3:
     - ☁️ Deployed on Streamlit Cloud
     
     **Architecture:**
-    1. Research Agent - Gathers information
+    1. Research Agent - Gathers comprehensive information
     2. Analysis Agent - Analyzes and extracts insights
     3. Planning Agent - Creates strategic plans
     4. Execution Agent - Proposes implementation steps
