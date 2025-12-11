@@ -179,7 +179,7 @@ with st.sidebar:
         "Max Tokens",
         min_value=100,
         max_value=4096,
-        value=1024,
+        value=2048,
         step=100
     )
     
