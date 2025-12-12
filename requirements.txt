@@ -1,6 +1,5 @@
 # Multi-Agent Task 3 - Python Dependencies
 # For running the advanced multi-agent AI system
-
 # Core Framework & Async Support
 aiofiles>=23.1.0
 aiohttp>=3.9.0
